@@ -1,154 +1,187 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Bucks County CrimeWatch – Today</title>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bucks County CrimeWatch Dashboard</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f7fa;
       margin: 0;
-      padding: 0;
+      background: #f4f6f8;
+      color: #1f2933;
     }
 
-    .header {
-      background: #1f2937;
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: #0f172a;
       color: white;
-      padding: 20px;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
     }
 
-    .header h1 {
+    .hero h1 {
+      margin: 0 0 8px 0;
+      font-size: 2rem;
+    }
+
+    .hero p {
       margin: 0;
-      font-size: 28px;
+      line-height: 1.5;
+      color: #dbe2ea;
     }
 
-    .header p {
-      margin: 5px 0 0;
-      color: #cbd5e1;
-      font-size: 14px;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 0 15px;
-    }
-
-    .agency-card {
-      background: white;
-      border-radius: 10px;
-      padding: 15px 20px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    }
-
-    .agency-title {
-      font-size: 18px;
+    .summary {
+      display: inline-block;
+      margin-top: 16px;
+      background: #1e293b;
+      padding: 10px 14px;
+      border-radius: 8px;
       font-weight: bold;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .card h2 {
+      margin: 0 0 8px 0;
+      font-size: 1.2rem;
+    }
+
+    .meta {
+      font-size: 0.95rem;
+      color: #52606d;
       margin-bottom: 10px;
-      color: #111827;
-      border-bottom: 1px solid #e5e7eb;
-      padding-bottom: 5px;
+      line-height: 1.5;
     }
 
-    .post-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .summary-text {
+      margin-bottom: 12px;
+      line-height: 1.5;
     }
 
-    .post-item {
-      padding: 10px 0;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .post-item:last-child {
-      border-bottom: none;
-    }
-
-    .post-link {
+    a.read-more {
+      display: inline-block;
       text-decoration: none;
-      color: #111827;
-      font-weight: 600;
+      background: #1d4ed8;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: bold;
     }
 
-    .post-link:hover {
-      text-decoration: underline;
+    a.read-more:hover {
+      background: #1e40af;
     }
 
-    .post-date {
-      font-size: 12px;
-      color: #9ca3af;
-      margin-left: 8px;
-    }
-
-    .no-posts {
+    .empty {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
       text-align: center;
-      margin-top: 40px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      font-size: 0.9rem;
       color: #6b7280;
-      font-size: 18px;
     }
   </style>
 </head>
-
 <body>
+  <div class="page">
+    <div class="hero">
+      <h1>Bucks County CrimeWatch Dashboard</h1>
+      <p>Latest CrimeWatch posts published today from Bucks County agencies.</p>
+      <div class="summary" id="post-count">Loading posts...</div>
+    </div>
 
-<div class="header">
-  <h1>Bucks County CrimeWatch</h1>
-  <p>Today's activity across local departments</p>
-</div>
+    <div id="posts-container"></div>
 
-<div class="container" id="content"></div>
+    <div class="footer-note">
+      Data source: Bucks County agency CrimeWatch pages. Updated from scripts/data/today_posts.csv.
+    </div>
+  </div>
 
-<script>
-fetch("/scripts/data/today_posts.json")
-  .then(res => res.json())
-  .then(data => {
-    const container = document.getElementById("content");
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    const csvFile = "../scripts/data/today_posts.csv";
+    const container = document.getElementById("posts-container");
+    const postCount = document.getElementById("post-count");
 
-    const agencies = Object.keys(data);
-
-    if (agencies.length === 0) {
-      container.innerHTML = '<div class="no-posts">No posts today</div>';
-      return;
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return "";
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
     }
 
-    agencies.forEach(agency => {
-      const card = document.createElement("div");
-      card.className = "agency-card";
+    function renderPosts(rows) {
+      container.innerHTML = "";
 
-      const title = document.createElement("div");
-      title.className = "agency-title";
-      title.textContent = agency;
+      if (!rows.length) {
+        postCount.textContent = "0 posts found today";
+        container.innerHTML = `
+          <div class="empty">
+            <h2>No posts found for today.</h2>
+            <p>Check back later for new updates.</p>
+          </div>
+        `;
+        return;
+      }
 
-      const list = document.createElement("ul");
-      list.className = "post-list";
+      postCount.textContent = `${rows.length} post${rows.length === 1 ? "" : "s"} found today`;
 
-      data[agency].forEach(post => {
-        const li = document.createElement("li");
-        li.className = "post-item";
+      rows.forEach(row => {
+        const card = document.createElement("div");
+        card.className = "card";
 
-        const a = document.createElement("a");
-        a.href = post.url;
-        a.textContent = post.title;
-        a.target = "_blank";
-        a.className = "post-link";
+        card.innerHTML = `
+          <h2>${escapeHtml(row.title || "Untitled Post")}</h2>
+          <div class="meta">
+            <strong>Agency:</strong> ${escapeHtml(row.agency_name || "")}<br>
+            <strong>Date:</strong> ${escapeHtml(row.date || "")}
+          </div>
+          <div class="summary-text">${escapeHtml(row.summary || "")}</div>
+          <a class="read-more" href="${escapeHtml(row.link || "#")}" target="_blank" rel="noopener noreferrer">Read more</a>
+        `;
 
-        const date = document.createElement("span");
-        date.className = "post-date";
-        date.textContent = post.date;
-
-        li.appendChild(a);
-        li.appendChild(date);
-        list.appendChild(li);
+        container.appendChild(card);
       });
+    }
 
-      card.appendChild(title);
-      card.appendChild(list);
-      container.appendChild(card);
+    Papa.parse(csvFile, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        renderPosts(results.data);
+      },
+      error: function(error) {
+        postCount.textContent = "Error loading posts";
+        container.innerHTML = `
+          <div class="empty">
+            <h2>Could not load today_posts.csv</h2>
+            <p>${escapeHtml(error.message || "Unknown error")}</p>
+          </div>
+        `;
+      }
     });
-  });
-</script>
-
+  </script>
 </body>
 </html>
