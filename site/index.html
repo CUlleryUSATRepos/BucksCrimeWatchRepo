@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bucks County CrimeWatch – Today</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header {
+      background: #1f2937;
+      color: white;
+      padding: 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .header p {
+      margin: 5px 0 0;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    .agency-card {
+      background: white;
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .agency-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #111827;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 5px;
+    }
+
+    .post-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .post-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .post-item:last-child {
+      border-bottom: none;
+    }
+
+    .post-link {
+      text-decoration: none;
+      color: #111827;
+      font-weight: 600;
+    }
+
+    .post-link:hover {
+      text-decoration: underline;
+    }
+
+    .post-date {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-left: 8px;
+    }
+
+    .no-posts {
+      text-align: center;
+      margin-top: 40px;
+      color: #6b7280;
+      font-size: 18px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>Bucks County CrimeWatch</h1>
+  <p>Today's activity across local departments</p>
+</div>
+
+<div class="container" id="content"></div>
+
+<script>
+fetch("/scripts/data/today_posts.json")
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById("content");
+
+    const agencies = Object.keys(data);
+
+    if (agencies.length === 0) {
+      container.innerHTML = '<div class="no-posts">No posts today</div>';
+      return;
+    }
+
+    agencies.forEach(agency => {
+      const card = document.createElement("div");
+      card.className = "agency-card";
+
+      const title = document.createElement("div");
+      title.className = "agency-title";
+      title.textContent = agency;
+
+      const list = document.createElement("ul");
+      list.className = "post-list";
+
+      data[agency].forEach(post => {
+        const li = document.createElement("li");
+        li.className = "post-item";
+
+        const a = document.createElement("a");
+        a.href = post.url;
+        a.textContent = post.title;
+        a.target = "_blank";
+        a.className = "post-link";
+
+        const date = document.createElement("span");
+        date.className = "post-date";
+        date.textContent = post.date;
+
+        li.appendChild(a);
+        li.appendChild(date);
+        list.appendChild(li);
+      });
+
+      card.appendChild(title);
+      card.appendChild(list);
+      container.appendChild(card);
+    });
+  });
+</script>
+
+</body>
+</html>
