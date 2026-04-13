@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from datetime import datetime
 
+
 AGENCY_FILE = "data/agency_links.csv"
 OUTPUT_FILE = "data/today_posts.csv"
 
@@ -98,6 +99,10 @@ def main():
 
     print(final_df)
     final_df.to_csv(OUTPUT_FILE, index=False)
+
+
+    with open("data/last_updated.txt", "w", encoding="utf-8") as f:
+        f.write(datetime.now().strftime("%Y-%m-%d %I:%M:%S %p"))
     print(f"Saved {len(final_df)} rows to {OUTPUT_FILE}")
 
 

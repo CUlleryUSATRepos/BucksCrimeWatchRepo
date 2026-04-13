@@ -40,6 +40,7 @@
     .summary {
       display: inline-block;
       margin-top: 16px;
+      margin-right: 10px;
       background: #1e293b;
       padding: 10px 14px;
       border-radius: 8px;
@@ -106,6 +107,7 @@
       <h1>Bucks County CrimeWatch Dashboard</h1>
       <p>Latest CrimeWatch posts published today from Bucks County agencies.</p>
       <div class="summary" id="post-count">Loading posts...</div>
+      <div class="summary" id="last-updated">Last checked: loading...</div>
     </div>
 
     <div id="posts-container"></div>
@@ -118,8 +120,10 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     const csvFile = "scripts/data/today_posts.csv";
+    const timestampFile = "scripts/data/last_updated.txt";
     const container = document.getElementById("posts-container");
     const postCount = document.getElementById("post-count");
+    const lastUpdated = document.getElementById("last-updated");
 
     function escapeHtml(text) {
       if (text === null || text === undefined) return "";
@@ -182,6 +186,15 @@
         `;
       }
     });
+
+    fetch(timestampFile)
+      .then(response => response.text())
+      .then(text => {
+        lastUpdated.textContent = `Last checked: ${text}`;
+      })
+      .catch(() => {
+        lastUpdated.textContent = "Last checked: unavailable";
+      });
   </script>
 </body>
 </html>

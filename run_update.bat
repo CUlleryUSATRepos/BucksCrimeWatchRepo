@@ -1,15 +1,12 @@
 @echo off
-
 cd /d "C:\Users\Chris Ullery\PycharmProjects\NewCrimewatch"
 
-call .venv\Scripts\activate
+call .venv\Scripts\activate.bat
 
-echo Running FULL pipeline...
+cd scripts
+python scrape_press_releases.py
+cd ..
 
-python scripts\fetch_directory_links.py || exit /b
-python scripts\run_all_agencies.py || exit /b
-python scripts\filter_today_posts.py || exit /b
-python scripts\build_today_json.py || exit /b
-
-echo Done.
-pause
+git add scripts\data\today_posts.csv
+git commit -m "Auto update CrimeWatch dashboard"
+git push
