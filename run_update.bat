@@ -7,6 +7,6 @@ cd scripts
 python scrape_press_releases.py
 cd ..
 
-git add scripts\data\today_posts.csv
+git add scripts\data\today_posts.csv scripts\data\last_updated.txt
 git commit -m "Auto update CrimeWatch dashboard"
 git push
